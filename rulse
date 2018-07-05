@@ -1,0 +1,11 @@
+CC=gcc
+CPP=g++ 
+CFLAGS= -Wall -g
+CPPFLAGS= -Wall -g -std=c++11 -lpthread -m32
+SRC=${wildcard *.cpp}
+OBJ=${patsubst %.cpp,%.o,$(SRC)}
+Lib=$(RootPath)/lib/
+Bin=$(RootPath)/bin/
+Inc=$(RootPath)/include/
+INC= -I $(Inc)
+DEFINE= -D LINUX_PROJ
