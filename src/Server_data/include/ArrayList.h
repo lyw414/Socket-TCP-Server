@@ -118,4 +118,8 @@ public:
 		}
 		return tmp;
 	}
+    int max_size()
+    {
+        return m_size;
+    }
 };

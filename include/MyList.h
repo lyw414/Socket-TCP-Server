@@ -3,7 +3,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <iostream>
-#include "Client_Data.h"
+#include "ArrayList.h"
 #ifdef LINUX_PROJ
 #include <unistd.h>
 #endif
@@ -21,9 +21,11 @@ private:
 	std::mutex m_cv_lock;
 	std::mutex m_msg_lock;
 	//std::list < T > m_list;
-	Client_Data < T > m_list;
+	ArrayList < T > m_list;
 	int m_max_size = -1;
 public:
+    MyList(int fixed_size ) : m_list(fixed_size) {}
+    MyList() : m_list() {}
 	int size()
 	{
 		int tmp = 0;
@@ -49,7 +51,7 @@ public:
 	{
 		m_msg_lock.lock();
 		m_list.push_back(msg);
-		if (max == -1 || max * 2 > m_list.max_size() || m_list.size() > max)
+		if (max == -1 || (max * 2) > m_list.max_size() || m_list.size() > max)
 		{
 			m_msg_lock.unlock();
 			m_cv.notify_one();

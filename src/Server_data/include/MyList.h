@@ -24,6 +24,8 @@ private:
 	ArrayList < T > m_list;
 	int m_max_size = -1;
 public:
+    MyList(int fixed_size ) : m_list(fixed_size) {}
+    MyList() : m_list() {}
 	int size()
 	{
 		int tmp = 0;
@@ -49,7 +51,7 @@ public:
 	{
 		m_msg_lock.lock();
 		m_list.push_back(msg);
-		if (max == -1 || max * 2 > m_list.max_size() || m_list.size() > max)
+		if (max == -1 || (max * 2) > m_list.max_size() || m_list.size() > max)
 		{
 			m_msg_lock.unlock();
 			m_cv.notify_one();

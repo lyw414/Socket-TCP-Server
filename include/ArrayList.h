@@ -1,7 +1,7 @@
 #pragma once
 #include <list>
 template < typename T >
-class Client_Data
+class ArrayList
 {
 private:
 	int m_real_size;
@@ -10,7 +10,7 @@ private:
 	int m_head;
 	int m_end;
 public:
-	Client_Data(int size)
+	ArrayList(int size)
 	{
 		if (size < 0)
 		{
@@ -26,7 +26,7 @@ public:
 		m_end = 1;
 	}
 
-	Client_Data()
+	ArrayList()
 	{
 		m_size = 1024;
 		m_real_size = m_size + 2;
@@ -34,7 +34,7 @@ public:
 		m_head = 0;
 		m_end = 1;
 	}
-	~Client_Data()
+	~ArrayList()
 	{
 		if (m_data != NULL)
 		{
@@ -118,4 +118,8 @@ public:
 		}
 		return tmp;
 	}
+    int max_size()
+    {
+        return m_size;
+    }
 };

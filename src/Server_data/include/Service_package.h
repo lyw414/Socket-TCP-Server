@@ -1,6 +1,7 @@
 #pragma once
 #include <mutex>
 #include <list>
+#include <iostream>
 typedef struct client_info
 {
 #ifdef LINUX_PROJ
@@ -22,18 +23,19 @@ class Service_package
 private:
 
 #ifdef LINUX_PROJ
-    typedef int TSOCKECT;
+    typedef int TSOCKET;
 #else
-    typedef SOCKET TSOCKECT;
+    typedef SOCKET TSOCKET;
 #endif
     std::string m_ip;
-    TSOCKECT m_socket;
+    TSOCKET m_socket;
     // 1 按最大长度缓存 2 按最大条数缓存 0 不缓存
     int m_mode;
     std::string m_msg;
-    std::list < std::string> m_list;
-    int m_max_len;
-    int m_max_num;
+    size_t m_max_len;
+    size_t m_max_num;
+    //记录每则消息的长度
+    std::list < size_t > m_list;
     std::mutex m_lock;
 
 public:
@@ -45,11 +47,11 @@ public:
         m_lock.unlock();
     }
 
-    BOOL m_in_list;
-    Service_package ( int m_mode, int max_size )
+    bool m_in_list;
+    Service_package ( int mode, int max_size )
     {
         m_in_list = false;
-        sck = -1;
+        m_socket = -1;
         m_ip = "";
         m_mode = mode;
         if ( m_mode == 0 )
@@ -71,12 +73,12 @@ public:
         }
         else
         {
-            m_mode == 1;
+            m_mode = 1;
             m_max_len = 10240;
             m_max_num = 0;
         }
     }
-    BOOL reset (int mode, int max_size,TSOCKET sck,std::string ip)
+    bool reset (int mode, int max_size,TSOCKET sck,std::string ip)
     {
         m_lock.lock();
         m_mode = mode;
@@ -99,7 +101,7 @@ public:
         }
         else
         {
-            m_mode == 1;
+            m_mode = 1;
             m_max_len = 10240;
             m_max_num = 0;
         }
@@ -108,7 +110,7 @@ public:
         m_ip = ip;
         m_msg = "";
         m_list.clear();
-        m_lock.lock();
+        m_lock.unlock();
         return true;
     }
     
@@ -125,11 +127,7 @@ public:
     {
         if ( m_mode == 1 )
         {
-            if ( m_msg.length() < m_max_len )
-            {
-                m_msg += msg; 
-            }
-            else
+            if ( m_msg.length() > m_max_len )
             {
                 return -2;
             }
@@ -143,8 +141,10 @@ public:
                     return -2;
                 }
             }
-            m_list.push_back(msg);
+
         }
+        m_msg += msg; 
+        m_list.push_back(msg.length());
         return 0;
     }
 
@@ -154,18 +154,22 @@ public:
         tmp.first.m_socket = m_socket;
         tmp.first.m_ip = m_ip;
         m_in_list = false;
-        if ( m_mode == 1 )
+        size_t index_begin = 0;
+        for ( auto & p : m_list ) 
         {
-            //消息存在于字符串
-            tmp.second.push_back(m_msg);
-            m_msg = "";
+            if ( index_begin + p <= m_msg.length() )
+            {
+                tmp.second.push_back(m_msg.substr(index_begin,p));
+                index_begin += p;
+            }
+            else
+            {
+                std::cout << "Error Msg" << std::endl;
+                break;
+            }
         }
-        else
-        {
-            //消息存在于列表
-            tmp.second = m_list;
-            m_list.clear();
-        }
+        m_list.clear();
+        m_msg = "";
         return tmp;
     }
 };
