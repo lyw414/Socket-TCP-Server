@@ -27,8 +27,6 @@ private:
 #else
     typedef SOCKET TSOCKET;
 #endif
-    std::string m_ip;
-    TSOCKET m_socket;
     // 1 按最大长度缓存 2 按最大条数缓存 0 不缓存
     int m_mode;
     std::string m_msg;
@@ -39,6 +37,8 @@ private:
     std::mutex m_lock;
 
 public:
+    std::string m_ip;
+    TSOCKET m_socket;
     void set_info ( TSOCKET sck, std::string  ip )
     {
         m_lock.lock();
@@ -46,7 +46,6 @@ public:
         m_ip = ip;
         m_lock.unlock();
     }
-
     bool m_in_list;
     Service_package ( int mode, int max_size )
     {
@@ -153,7 +152,6 @@ public:
         std::pair < TClient_info,std::list <std::string > > tmp;
         tmp.first.m_socket = m_socket;
         tmp.first.m_ip = m_ip;
-        m_in_list = false;
         size_t index_begin = 0;
         for ( auto & p : m_list ) 
         {
