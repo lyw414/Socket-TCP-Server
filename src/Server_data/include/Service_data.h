@@ -299,6 +299,9 @@ public:
                     }
                     else
                     {
+                        std::cout << "put message to list error!" << std::endl;
+                        tmp->unlock();
+                        m_map_lock.read_unlock();
                         return -1;
                     }
                 }
@@ -313,9 +316,9 @@ public:
     {
         std::list < std::pair < TClient_info,std::list <std::string> > > res;
         std::pair < int, std::list < std::pair < TSOCKET, PService_package > > > tmp;
-        m_map_lock.read_lock();
         if ( ( tmp = m_data.get_all_with_wait_notify(timeout) ).first > 0 )
         {
+            m_map_lock.read_lock();
             for ( auto & p : tmp.second )
             {
                 p.second->lock();
@@ -333,8 +336,8 @@ public:
                 }
                 p.second->unlock();
             }
+            m_map_lock.read_unlock();
         }
-        m_map_lock.read_unlock();
         return res;
     }
 };

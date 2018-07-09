@@ -18,7 +18,6 @@ public:
         m_operator_lock.lock();
         m_writer_flg = 1;
         m_write_lock.lock();
-
     }
     void write_unlock()
     {

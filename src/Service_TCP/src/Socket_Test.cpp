@@ -7,6 +7,7 @@
 
 MyList < int > mylist;
 Socket_Svr socket_svr(2048,8,2);
+int m_recv_num[10000];
 
 int m_cli[4096];
 std::string m_ip[4096];
@@ -34,9 +35,8 @@ void func_recv(int index)
         std::list < std::pair < TClient_info,std::list <std::string> > > tmp;
         if ( m_cli[index] > 0 )
         {
-            Svr_res tmp;
             tmp = socket_svr.recv_msg();
-            std::cout << tmp.second.size() << std::endl; 
+            m_recv_num[index] += tmp.size();
         }
         else
         {
@@ -78,36 +78,37 @@ void func_sck()
     while ( true )
     {
         tmp = socket_svr.recv_connect_msg ();
-        std::string status;
+        std::string m_status;
         for ( auto & p : tmp )
         {
-            status = p.back();
-        if ( m_status == "1" )
-        {
-            index = find_cli ( p.first.m_socket );
-            if ( index != -1 )
+            m_status = p.second.back();
+            if ( m_status == "1" )
             {
-                std::cout << "socket repeated" << std::endl;
+                index = find_cli ( p.first.m_socket );
+                if ( index != -1 )
+                {
+                    std::cout << "socket repeated" << std::endl;
+                }
+                else
+                {
+                   index = find_new();
+                   m_cli[index] = p.first.m_socket;
+                   i++;
+                   //std::cout << "recv connected :" << i << " sokcet : " << p.first.m_socket << std::endl;
+                }
             }
             else
             {
-               index = find_new();
-               m_cli[index] = p.first.m_socket;
-               i++;
-               std::cout << "recv connected :" << i << " sokcet : " << tmp.m_socket <<std::endl;
-            }
-        }
-        else
-        {
-            index = find_cli ( p.first.m_socket );
-            j++;
-            std::cout << "recv disconnect " << j <<" sokcet : "<<p.first.m_socket<< std::endl;
-            if ( index == -1 )
-            {
-            }
-            else
-            {
-               m_cli[index] = -1;
+                index = find_cli ( p.first.m_socket );
+                j++;
+                std::cout << "recv disconnect " << j <<" sokcet : "<<p.first.m_socket<< std::endl;
+                if ( index == -1 )
+                {
+                }
+                else
+                {
+                   m_cli[index] = -1;
+                }
             }
         }
     }
@@ -120,7 +121,7 @@ int main( int argc,char *argv[] )
     std::thread t3[1024];
     
     int num = 10;
-    int num2 = 10;
+    int num2 = 1;
     int num1 = 1;
     socket_svr.create_svr_thread(8988);
 
@@ -137,6 +138,19 @@ int main( int argc,char *argv[] )
     for ( int iLoop = 0; iLoop < num1; iLoop++ )
     {
         t3[iLoop] = std::thread (func_sck);
+    }
+    int total;
+
+    while ( true )
+    {
+        total = 0;
+        for ( int iLoop = 0; iLoop < num; iLoop++ )
+        {
+            total += m_recv_num [iLoop];
+            m_recv_num [iLoop] = 0;
+        }
+        sleep (1);
+        std::cout << total << std::endl;
     }
 
     for ( int iLoop = 0; iLoop < num2; iLoop ++ )

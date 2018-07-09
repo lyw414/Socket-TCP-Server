@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <string.h>
+#include "Service_data.h"
 
 #ifdef LINUX_PROJ
 #include <sys/epoll.h>
@@ -47,8 +48,8 @@ typedef struct _IO_Operater_Data
 
 
 #endif
-
-typedef struct Svr_res
+/*
+struct Svr_res
 {
 #ifdef LINUX_PROJ
 	int m_socket;
@@ -61,7 +62,7 @@ typedef struct Svr_res
 	//1 链正常 0 断链 -1 socket异常主动断链
 	int m_status;
 };
-
+*/
 /*
 * @brief   tcp多连接原型 使用三条队列 数据接收队列、数据发送队列、客户端状态队列
 *          分别维护接收数据、发送数据、客户端建链断链，对外暴露数据读写、状态获取接口
@@ -77,11 +78,11 @@ private:
 #endif
     Client_interpreter m_recv_msg;
     Client_interpreter m_send_msg;
-    Client_interpreter m_connet_msg;
+    Client_interpreter m_connect_msg;
 
     void Free_Client ( TSOCKET sck )
     {
-        m_connet_msg.delete_client(sck); 
+        m_connect_msg.delete_client(sck); 
         m_recv_msg.delete_client(sck); 
         m_send_msg.delete_client(sck); 
     }
@@ -89,11 +90,11 @@ private:
     bool IsSckUsefull ( TSOCKET sck )
     {
         //以m_connect_msg 队列的资源为准
-        return m_connet_msg.IsSCKUsefull(sck); 
+        return m_connect_msg.IsSCKUsefull(sck); 
     }
     void Add_Client ( TSOCKET sck,std::string ip )
     {
-        m_connet_msg.add_client(sck,ip); 
+        m_connect_msg.add_client(sck,ip); 
         m_recv_msg.add_client(sck,ip); 
         m_send_msg.add_client(sck,ip); 
     }
@@ -149,6 +150,7 @@ private:
 
 	void  create_svr_thread_run()
 	{
+
 		memset(&server_addr_in, 0x00, sizeof(server_addr_in));
 		server_addr_in.sin_family = AF_INET;
 		server_addr_in.sin_port = htons(m_port);
@@ -219,6 +221,7 @@ private:
 						std::cout << "accept error!" << std::endl;
 						continue;
 					}
+
 					//设置连接为非阻塞
 					fcntl(conn, F_SETFL, fcntl(conn, F_GETFL, 0) | O_NONBLOCK);
 					//登记连接
@@ -248,7 +251,7 @@ private:
 		close(m_epoll_fd);
 		close(m_listen);
         //释放连接资源
-        Free_All_Client()
+        Free_All_Client();
 		delete m_epoll_events;
 	}
 	void recv_thread_run()
@@ -262,7 +265,8 @@ private:
 		while (m_svr_status == 1)
 		{
 			tmp = m_recv_ready_fd.get_front_with_wait_notify(2);
-			if (tmp.first == 0 && tmp.second > 0)
+
+			if (tmp.first > 0 && tmp.second > 0)
 			{
 			    //未登记 则断开连接 等待建链后登记信息
                 if ( !IsSckUsefull( tmp.second ) )
@@ -353,7 +357,7 @@ private:
 	{
 		//循环等待发送通知
 		struct epoll_event ev;
-        std::list < std::pair < TClient_info,std::list <std::string> > > tmp:
+        std::list < std::pair < TClient_info,std::list <std::string> > > tmp;
 		int ret = 0;
 		while (m_svr_status == 1)
 		{
@@ -378,7 +382,7 @@ private:
                         else
                         {
                             //套接字异常
-							m_connect_msg.add_msg ( tmp.second,"0" );
+							m_connect_msg.add_msg ( p.first.m_socket ,"0" );
                             Free_Client ( p.first.m_socket );
                             ev.data.fd = p.first.m_socket;
 							ev.events = EPOLLERR;
@@ -880,11 +884,10 @@ public:
 	std::list < std::pair < TClient_info,std::list <std::string> > > recv_msg(int timeout = -1)
 	{
         std::list < std::pair < TClient_info,std::list <std::string> > > tmp;
-		std::pair <int, std::list<Svr_res>> tmp;
 		while (true)
 		{
 			tmp = m_recv_msg.get_msg(timeout);
-		    return tmp.second;
+		    return tmp;
 		}
 	}
 
@@ -897,11 +900,10 @@ public:
     std::list < std::pair < TClient_info,std::list <std::string> > > recv_connect_msg (int timeout = -1)
 	{
         std::list < std::pair < TClient_info,std::list <std::string> > > tmp;
-		std::pair <int, std::list<Svr_res>> tmp;
 		while (true)
 		{
-			tmp = m_conn_msg.get_msg(timeout);
-		    return tmp.second;
+			tmp = m_connect_msg.get_msg(timeout);
+		    return tmp;
 		}
 	}
 };
