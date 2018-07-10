@@ -94,9 +94,12 @@ public:
 
 	std::pair < int, T > pop_front()
 	{
+		
+		std::pair < int, T > tmp;
 		if (empty())
 		{
-			return std::pair < int, T >(-1, NULL);
+			tmp.first = -1;
+			return tmp;
 		}
 		else
 		{
@@ -122,4 +125,8 @@ public:
     {
         return m_size;
     }
+	void clear()
+	{
+		m_end = (m_head + 1) % m_real_size;
+	}
 };

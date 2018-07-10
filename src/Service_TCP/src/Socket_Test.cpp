@@ -9,8 +9,8 @@ MyList < int > mylist;
 Socket_Svr socket_svr(2048,8,2);
 int m_recv_num[10000];
 
-int m_cli[4096];
-std::string m_ip[4096];
+int m_cli[10096];
+std::string m_ip[10096];
 void func_send(int index )
 {
     std::string msg = "sender " + std::to_string ( index );
@@ -47,7 +47,7 @@ void func_recv(int index)
 
 int find_cli(int sck)
 {
-    for ( int iLoop = 0; iLoop < 4096; iLoop ++ )
+    for ( int iLoop = 0; iLoop < 10096; iLoop ++ )
     {
         if ( m_cli[iLoop] == sck )
         {
@@ -59,7 +59,7 @@ int find_cli(int sck)
 
 int find_new ()
 {
-    for ( int iLoop = 0; iLoop < 4096; iLoop ++ )
+    for ( int iLoop = 0; iLoop < 10096; iLoop ++ )
     {
         if ( m_cli[iLoop] <= 0)
         {

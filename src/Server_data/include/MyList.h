@@ -9,7 +9,7 @@
 #endif
 
 /*
-* @brief  çº¿ç¨‹å®‰å…¨ å¸¦æœ‰å¯è¯»é€šçŸ¥
+* @brief  Ïß³Ì°²È« ´øÓĞ¿É¶ÁÍ¨Öª
 *
 *
 */
@@ -70,9 +70,9 @@ public:
 		return true;
 	}
 
-	/*  brief è·å–é˜Ÿåˆ—å¤´éƒ¨æˆå‘˜ï¼Œå¹¶å¼¹å‡ºè¯¥æ¶ˆæ¯
-	*  return pair.first Errcode -2 æ— æ¶ˆæ¯  0 æˆåŠŸ
-	*         pair.second           å¤´éƒ¨æˆå‘˜å†…å®¹
+	/*  brief »ñÈ¡¶ÓÁĞÍ·²¿³ÉÔ±£¬²¢µ¯³ö¸ÃÏûÏ¢
+	*  return pair.first Errcode -2 ÎŞÏûÏ¢  0 ³É¹¦
+	*         pair.second           Í·²¿³ÉÔ±ÄÚÈİ
 	*/
 	std::pair < int, T> get_front()
 	{
@@ -89,24 +89,27 @@ public:
 		return tmp;
 	}
 
-	/*  @brief  ç­‰å¾…é€šçŸ¥åè¯»å–å¤´éƒ¨æ¶ˆæ¯ï¼Œå¹¶å¼¹å‡ºè¯¥æ¶ˆæ¯
-	*  @param[in] timeout           ç­‰å¾…è¶…æ—¶æ—¶é—´ -1æ ‡è¯†ä¸€ç›´ç­‰å¾…ç›´è‡³å–åˆ°æ¶ˆæ¯
-	*  return pair.first Errcode -1 ç­‰å¾…è¶…æ—¶  0 æˆåŠŸ
-	*         pair.second           å¤´éƒ¨æˆå‘˜å†…å®¹
+	/*  @brief  µÈ´ıÍ¨Öªºó¶ÁÈ¡Í·²¿ÏûÏ¢£¬²¢µ¯³ö¸ÃÏûÏ¢
+	*  @param[in] timeout           µÈ´ı³¬Ê±Ê±¼ä -1±êÊ¶Ò»Ö±µÈ´ıÖ±ÖÁÈ¡µ½ÏûÏ¢
+	*  return pair.first Errcode -1 µÈ´ı³¬Ê±  0 ³É¹¦
+	*         pair.second           Í·²¿³ÉÔ±ÄÚÈİ
 	*/
 	std::pair < int, T> get_front_with_wait_notify(int timeout = -1)
 	{
 		std::pair < int, T> tmp;
-		//æŸ¥çœ‹é˜Ÿåˆ—æ˜¯å¦æœ‰èµ„æºï¼Œè‹¥å­˜åœ¨èµ„æºåˆ™å–å‡ºèµ„æº å¦åˆ™è¿›å…¥ç­‰å¾…
-		//è·å–èµ„æºé” å–å‡ºæ¶ˆæ¯
-		m_msg_lock.lock();
+		//²é¿´¶ÓÁĞÊÇ·ñÓĞ×ÊÔ´£¬Èô´æÔÚ×ÊÔ´ÔòÈ¡³ö×ÊÔ´ ·ñÔò½øÈëµÈ´ı
+		//»ñÈ¡×ÊÔ´Ëø È¡³öÏûÏ¢
 		if (!m_list.empty())
 		{
+			m_msg_lock.lock();
 			tmp = m_list.pop_front();
+			if (tmp.first != -1)
+			{
+				m_msg_lock.unlock();
+				return tmp;
+			}
 			m_msg_lock.unlock();
-			return tmp;
 		}
-		m_msg_lock.unlock();
 		std::unique_lock < std::mutex > lck(m_cv_lock);
 		while (true)
 		{
@@ -118,7 +121,7 @@ public:
 			{
 				if (m_cv.wait_for(lck, std::chrono::seconds(timeout)) == std::cv_status::timeout)
 				{
-					//è·å–èµ„æºé” å–å‡ºæ¶ˆæ¯
+					//»ñÈ¡×ÊÔ´Ëø È¡³öÏûÏ¢
 					m_msg_lock.lock();
 					if (m_list.empty())
 					{
@@ -131,7 +134,7 @@ public:
 					return tmp;
 				}
 			}
-			//è·å–èµ„æºé” å–å‡ºæ¶ˆæ¯
+			//»ñÈ¡×ÊÔ´Ëø È¡³öÏûÏ¢
 			m_msg_lock.lock();
 			if (m_list.empty())
 			{
@@ -144,9 +147,9 @@ public:
 		}
 	}
 
-	/*  @brief  ç­‰å¾…é€šçŸ¥åè¯»å–åˆ—è¡¨ï¼Œå¹¶æ¸…ç©º
-	*  return pair.first Errcode    -2 æ¶ˆæ¯ä¸ºç©º  0 æˆåŠŸ
-	*         pair.second           listå…¨éƒ¨å†…å®¹
+	/*  @brief  µÈ´ıÍ¨Öªºó¶ÁÈ¡ÁĞ±í£¬²¢Çå¿Õ
+	*  return pair.first Errcode    -2 ÏûÏ¢Îª¿Õ  0 ³É¹¦
+	*         pair.second           listÈ«²¿ÄÚÈİ
 	*/
 	std::pair < int, std::list < T > > get_all()
 	{
@@ -164,16 +167,16 @@ public:
 		return tmp;
 	}
 
-	/*  @brief  ç­‰å¾…é€šçŸ¥åè¯»å–
-	*  @param[in] timeout           ç­‰å¾…è¶…æ—¶æ—¶é—´ -1æ ‡è¯†ä¸€ç›´ç­‰å¾…ç›´è‡³å–åˆ°æ¶ˆæ¯
-	*  return pair.first Errcode -1 ç­‰å¾…è¶…æ—¶  0 æˆåŠŸ
-	*         pair.second           å¤´éƒ¨æˆå‘˜å†…å®¹
+	/*  @brief  µÈ´ıÍ¨Öªºó¶ÁÈ¡
+	*  @param[in] timeout           µÈ´ı³¬Ê±Ê±¼ä -1±êÊ¶Ò»Ö±µÈ´ıÖ±ÖÁÈ¡µ½ÏûÏ¢
+	*  return pair.first Errcode -1 µÈ´ı³¬Ê±  0 ³É¹¦
+	*         pair.second           Í·²¿³ÉÔ±ÄÚÈİ
 	*/
 	std::pair <int, std::list < T > > get_all_with_wait_notify(int timeout = -1)
 	{
 		std::pair <int, std::list < T > > tmp;
-		//æŸ¥çœ‹é˜Ÿåˆ—æ˜¯å¦æœ‰èµ„æºï¼Œè‹¥å­˜åœ¨èµ„æºåˆ™å–å‡ºèµ„æº å¦åˆ™è¿›å…¥ç­‰å¾…
-		//è·å–èµ„æºé” å–å‡ºæ¶ˆæ¯
+		//²é¿´¶ÓÁĞÊÇ·ñÓĞ×ÊÔ´£¬Èô´æÔÚ×ÊÔ´ÔòÈ¡³ö×ÊÔ´ ·ñÔò½øÈëµÈ´ı
+		//»ñÈ¡×ÊÔ´Ëø È¡³öÏûÏ¢
 		/*
 		m_msg_lock.lock();
 		if (!m_list.empty())
@@ -196,7 +199,7 @@ public:
 			{
 				if (m_cv.wait_for(lck, std::chrono::seconds(timeout)) == std::cv_status::timeout)
 				{
-					//è·å–èµ„æºé” å–å‡ºæ¶ˆæ¯
+					//»ñÈ¡×ÊÔ´Ëø È¡³öÏûÏ¢
 					m_msg_lock.lock();
 					if (m_list.empty())
 					{
@@ -210,7 +213,7 @@ public:
 					return tmp;
 				}
 			}
-			//è·å–èµ„æºé” å–å‡ºæ¶ˆæ¯
+			//»ñÈ¡×ÊÔ´Ëø È¡³öÏûÏ¢
 			m_msg_lock.lock();
 			if (m_list.empty())
 			{

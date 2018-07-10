@@ -2,6 +2,7 @@
 #include <mutex>
 #include <list>
 #include <iostream>
+#include "ArrayList.h"
 typedef struct client_info
 {
 #ifdef LINUX_PROJ
@@ -13,32 +14,33 @@ typedef struct client_info
     std::string m_ip;
 }TClient_info, *PClient_info;
 
-//æ•°æ®åŒ…
-//æ±‡èšæ•°æ® é…åˆé˜Ÿåˆ—ä½¿ç”¨ å‡å°‘é˜Ÿåˆ—çš„æ“ä½œ
-//å¢åŠ æå‡æµé‡çš„æ–¹å¼çš„å‹æ¦¨IOCP/EPOLLæ•ˆç‡ 
-//å‡å°‘èµ„æºæ“ä½œæ¬¡æ•° é™ä½CPUä½¿ç”¨ç‡
+//Êı¾İ°ü
+//»ã¾ÛÊı¾İ ÅäºÏ¶ÓÁĞÊ¹ÓÃ ¼õÉÙ¶ÓÁĞµÄ²Ù×÷
+//Ôö¼ÓÌáÉıÁ÷Á¿µÄ·½Ê½µÄÑ¹Õ¥IOCP/EPOLLĞ§ÂÊ 
+//¼õÉÙ×ÊÔ´²Ù×÷´ÎÊı ½µµÍCPUÊ¹ÓÃÂÊ
 
 class Service_package
 {
 private:
-
 #ifdef LINUX_PROJ
     typedef int TSOCKET;
 #else
     typedef SOCKET TSOCKET;
 #endif
-    // 1 æŒ‰æœ€å¤§é•¿åº¦ç¼“å­˜ 2 æŒ‰æœ€å¤§æ¡æ•°ç¼“å­˜ 0 ä¸ç¼“å­˜
+    // 1 °´×î´ó³¤¶È»º´æ 2 °´×î´óÌõÊı»º´æ 0 ²»»º´æ
     int m_mode;
     std::string m_msg;
-    size_t m_max_len;
     size_t m_max_num;
-    //è®°å½•æ¯åˆ™æ¶ˆæ¯çš„é•¿åº¦
-    std::list < size_t > m_list;
+    size_t m_max_len;
+    //¼ÇÂ¼Ã¿ÔòÏûÏ¢µÄ³¤¶È
+	std::list < size_t > m_list;
+	//ArrayList < size_t > m_list = ArrayList < size_t >(4096);
     std::mutex m_lock;
-
+    bool m_in_list;
 public:
     std::string m_ip;
     TSOCKET m_socket;
+
     void set_info ( TSOCKET sck, std::string  ip )
     {
         m_lock.lock();
@@ -46,7 +48,6 @@ public:
         m_ip = ip;
         m_lock.unlock();
     }
-    bool m_in_list;
     Service_package ( int mode, int max_size )
     {
         m_in_list = false;
@@ -113,21 +114,36 @@ public:
         return true;
     }
     
-    void lock()
-    {
-        m_lock.lock();
-    }
+	bool isUsed()
+	{
+		bool tmp;
+		m_lock.lock();
+		tmp = m_in_list;
+		m_lock.unlock();
+		return tmp;
+	}
+	void setUsed()
+	{
+		m_lock.lock();
+		m_in_list = true;
+		m_lock.unlock();
+	}
 
-    void unlock()
+	void setUnused()
+	{
+		m_lock.lock();
+		m_in_list = false;
+		m_lock.unlock();
+	}
+
+    int add_msg ( std::string msg, size_t cache = 0)
     {
-        m_lock.unlock();
-    }
-    int add_msg ( std::string msg )
-    {
+		m_lock.lock();
         if ( m_mode == 1 )
         {
             if ( m_msg.length() > m_max_len )
             {
+				m_lock.unlock();
                 return -2;
             }
         }
@@ -137,6 +153,7 @@ public:
             {
                 if ( m_list.size() > m_max_num )
                 {
+					m_lock.unlock();
                     return -2;
                 }
             }
@@ -144,15 +161,22 @@ public:
         }
         m_msg += msg; 
         m_list.push_back(msg.length());
-        return 0;
+		m_lock.unlock();
+		if (m_list.size() < cache)
+		{
+			return 0;
+		}
+		return 1;
     }
 
     std::pair < TClient_info,std::list <std::string> >  getMessage ( )
     {
         std::pair < TClient_info,std::list <std::string > > tmp;
+		m_lock.lock();
         tmp.first.m_socket = m_socket;
         tmp.first.m_ip = m_ip;
         size_t index_begin = 0;
+			
         for ( auto & p : m_list ) 
         {
             if ( index_begin + p <= m_msg.length() )
@@ -168,8 +192,8 @@ public:
         }
         m_list.clear();
         m_msg = "";
+		m_lock.unlock();
         return tmp;
     }
 };
 typedef Service_package * PService_package;
-

@@ -5,9 +5,9 @@
 #include "read_write_lock.h"
 #include "MyList.h"
 
-//å›ºå®šé•¿åº¦çš„å®¢æˆ·å•è¿æ¥èµ„æº
-//æä¾›èµ„æºåˆ†é…åŠŸèƒ½ å¯ä»¥ä¸€å®šç¨‹åº¦å‡å°‘ new delete
-//ä½¿ç”¨ å–å‡º ä¸ æ”¾å›çš„æœºåˆ¶ å¢åŠ èµ„æºçš„å¤ç”¨åº¦
+//¹Ì¶¨³¤¶ÈµÄ¿Í»§µ¥Á¬½Ó×ÊÔ´
+//Ìá¹©×ÊÔ´·ÖÅä¹¦ÄÜ ¿ÉÒÔÒ»¶¨³Ì¶È¼õÉÙ new delete
+//Ê¹ÓÃ È¡³ö Óë ·Å»ØµÄ»úÖÆ Ôö¼Ó×ÊÔ´µÄ¸´ÓÃ¶È
 class Service_data
 {
 private:
@@ -26,6 +26,7 @@ public:
         if ( fixed_len > 0 )
         {
             m_fixed_len = fixed_len;
+
         }
         else
         {
@@ -33,7 +34,7 @@ public:
         }
         m_data = new PService_package[m_fixed_len];
         index = 0;
-        //åˆ†é…å‡ºèµ„æº
+        //·ÖÅä³ö×ÊÔ´
         for ( int iLoop = 0 ; iLoop < m_fixed_len; iLoop ++ )
         {
             m_data[iLoop] = new Service_package(m_mode,m_max_size);
@@ -48,7 +49,7 @@ public:
         m_max_size = 10240;
         m_data = new PService_package[m_fixed_len];
         index = 0;
-        //åˆ†é…å‡ºèµ„æº
+        //·ÖÅä³ö×ÊÔ´
         for ( int iLoop = 0 ; iLoop < m_fixed_len; iLoop ++ )
         {
             m_data[iLoop] = new Service_package(m_mode,m_max_size);
@@ -104,7 +105,7 @@ public:
     }
 };
 
-//ä½¿ç”¨é˜Ÿåˆ— å®ä¾‹å‡º æ¥æ”¶ å‘é€ è¿æ¥
+//Ê¹ÓÃ¶ÓÁĞ ÊµÀı³ö ½ÓÊÕ ·¢ËÍ Á¬½Ó
 class Client_interpreter
 {
 private:
@@ -142,10 +143,10 @@ private:
     }
 
 public:
-    //max_list_size               æ¶ˆæ¯é˜Ÿåˆ—åˆå§‹åŒ–é•¿åº¦
-    //max_client_size             å®¢æˆ·ç«¯èµ„æºæ± å›ºå®šä¿ç•™èµ„æºä¸ªæ•°
-    //mode                        æ•°æ®åŒ…ç¼“å­˜æ¨¡å¼ï¼ˆ0 æ— ç¼“å­˜é™åˆ¶ 1 æŒ‰å¤§å°ç¼“å­˜ 2 æŒ‰è®°å½•æ¡æ•°ç¼“å­˜ï¼‰
-    //max_size                    æ•°æ®åŒ…ç¼“å­˜æœ€å¤§æ•°é‡ï¼ˆè¶…è¿‡è¯¥å€¼ åˆ™ä¸¢å¼ƒæ•°æ®åŒ…ï¼‰
+    //max_list_size               ÏûÏ¢¶ÓÁĞ³õÊ¼»¯³¤¶È
+    //max_client_size             ¿Í»§¶Ë×ÊÔ´³Ø¹Ì¶¨±£Áô×ÊÔ´¸öÊı
+    //mode                        Êı¾İ°ü»º´æÄ£Ê½£¨0 ÎŞ»º´æÏŞÖÆ 1 °´´óĞ¡»º´æ 2 °´¼ÇÂ¼ÌõÊı»º´æ£©
+    //max_size                    Êı¾İ°ü»º´æ×î´óÊıÁ¿£¨³¬¹ı¸ÃÖµ Ôò¶ªÆúÊı¾İ°ü£©
     Client_interpreter(int max_list_size, int max_client_size,int mode, int max_size) : 
                                     m_data(max_list_size),
                                     m_client_rc(max_client_size,mode,max_size)
@@ -159,7 +160,7 @@ public:
                          m_client_rc(1024,1,10240)
     {
         m_mode = 2;
-        m_max_size = 1024;
+        m_max_size = 4096;
     }
     
     bool add_client ( TSOCKET sck , std::string ip)
@@ -194,36 +195,41 @@ public:
         m_map_lock.write_lock();
         if ( ( tmp = Get_Client ( sck ) ) != NULL )
         {
+			//ÇåÀímapºó ²»»á´æÔÚÊ¹ÓÃÕß
             m_map.erase(sck);
-            tmp -> lock();
-            if ( !(tmp -> m_in_list) )
+			if ( !(tmp->isUsed()) )
             {
-                tmp -> unlock();
                 m_client_rc.put_back(tmp);
+				std::cout << "delete" << std::endl;
             }
-            tmp -> unlock();
+			else
+			{
+				tmp->setUnused();
+			}
         }
         m_map_lock.write_unlock();
         return true;
     }
+
 
     bool close_all ()
     {
         m_map_lock.write_lock();
         for ( auto & p : m_map )
         {
+#ifdef LINUX_PROJ
             close(p.first);
+#else
+			closesocket(p.first);
+#endif
             m_map.erase(p.first);
-            p.second -> lock();
-            if ( ! p.second -> m_in_list )
+            if ( ! p.second -> isUsed() )
             {
-                p.second -> unlock();
                 m_client_rc.put_back(p.second);
             }
             else
             {
-                p.second -> m_in_list = false;
-                p.second -> unlock();
+				p.second->setUnused();
             }
         }
         m_map_lock.write_unlock();
@@ -236,16 +242,13 @@ public:
         for ( auto & p : m_map )
         {
             m_map.erase(p.first);
-            p.second -> lock();
-            if ( ! p.second -> m_in_list )
+            if ( ! p.second -> isUsed() )
             {
-                p.second -> unlock();
                 m_client_rc.put_back(p.second);
             }
             else
             {
-                p.second -> m_in_list = false;
-                p.second -> unlock();
+				p.second->setUnused();
             }
         }
         m_map_lock.write_unlock();
@@ -274,40 +277,29 @@ public:
         return "";
     }
 
-    // -2 åŒ…ç¼“å­˜è¾¾åˆ°ä¸Šé™ -1 é˜Ÿåˆ—æ»¡
-    int add_msg ( TSOCKET sck, std::string msg )
+    // -2 °ü»º´æ´ïµ½ÉÏÏŞ -1 ¶ÓÁĞÂú
+    int add_msg ( TSOCKET sck, std::string msg,size_t cache = 0)
     {
         int ret =  0;
         PService_package tmp;
         m_map_lock.read_lock();
         if ( ( tmp = Get_Client ( sck ) ) != NULL )
         {
-            tmp->lock();
-            if ( ( ret = tmp->add_msg(msg) ) < 0 )
+			// < 0 ¶ÓÁĞÒì³£ 0 Î´´ïµ½»º´æÉÏÏŞ 1 ´ïµ½»º´æ
+            if ( ( ret = tmp->add_msg(msg,cache) ) < 0 )
             {
-                tmp->unlock();
                 m_map_lock.read_unlock();
                 return ret;
             }
-            else
+            else if (ret == 1)
             {
-                if ( !tmp -> m_in_list )
+                if ( !tmp -> isUsed() )
                 {
-                    if ( m_data.add_msg_with_notify_one ( std::pair<TSOCKET,PService_package>  (sck,tmp) ) )
-                    {
-                        tmp -> m_in_list = true;
-                    }
-                    else
-                    {
-                        std::cout << "put message to list error!" << std::endl;
-                        tmp->unlock();
-                        m_map_lock.read_unlock();
-                        return -1;
-                    }
+					tmp->setUsed();
+					m_data.add_msg_with_notify_one(std::pair<TSOCKET, PService_package>(sck, tmp));
                 }
             }
         }
-        tmp->unlock();
         m_map_lock.read_unlock();
         return ret;
     }
@@ -316,25 +308,22 @@ public:
     {
         std::list < std::pair < TClient_info,std::list <std::string> > > res;
         std::pair < int, std::list < std::pair < TSOCKET, PService_package > > > tmp;
-        if ( ( tmp = m_data.get_all_with_wait_notify(timeout) ).first > 0 )
+        if ( ( tmp = m_data.get_all_with_wait_notify( timeout) ).first > 0 )
         {
             m_map_lock.read_lock();
             for ( auto & p : tmp.second )
             {
-                p.second->lock();
                 res.push_back(p.second->getMessage());
-                //æŸ¥çœ‹èµ„æºå·²ç»å½’è¿˜
-                if ( !p.second-> m_in_list )
+                //²é¿´×ÊÔ´ÒÑ¾­¹é»¹
+                if ( !p.second-> isUsed() )
                 {
-                    p.second -> unlock();
                     m_client_rc.put_back( p.second );
                     continue;
                 }
                 else
                 {
-                    p.second->m_in_list = false;
+					p.second->setUnused();
                 }
-                p.second->unlock();
             }
             m_map_lock.read_unlock();
         }

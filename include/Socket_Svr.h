@@ -23,7 +23,7 @@
 
 
 #ifndef LINUX_PROJ
-//å®Œæˆé”®
+//Íê³É¼ü
 typedef struct _complate_key
 {
 	SOCKET m_socket;
@@ -59,13 +59,13 @@ struct Svr_res
 	std::string m_ip;
 	std::string m_msg;
 	int m_errcode;
-	//1 é“¾æ­£å¸¸ 0 æ–­é“¾ -1 socketå¼‚å¸¸ä¸»åŠ¨æ–­é“¾
+	//1 Á´Õı³£ 0 ¶ÏÁ´ -1 socketÒì³£Ö÷¶¯¶ÏÁ´
 	int m_status;
 };
 */
 /*
-* @brief   tcpå¤šè¿æ¥åŸå‹ ä½¿ç”¨ä¸‰æ¡é˜Ÿåˆ— æ•°æ®æ¥æ”¶é˜Ÿåˆ—ã€æ•°æ®å‘é€é˜Ÿåˆ—ã€å®¢æˆ·ç«¯çŠ¶æ€é˜Ÿåˆ—
-*          åˆ†åˆ«ç»´æŠ¤æ¥æ”¶æ•°æ®ã€å‘é€æ•°æ®ã€å®¢æˆ·ç«¯å»ºé“¾æ–­é“¾ï¼Œå¯¹å¤–æš´éœ²æ•°æ®è¯»å†™ã€çŠ¶æ€è·å–æ¥å£
+* @brief   tcp¶àÁ¬½ÓÔ­ĞÍ Ê¹ÓÃÈıÌõ¶ÓÁĞ Êı¾İ½ÓÊÕ¶ÓÁĞ¡¢Êı¾İ·¢ËÍ¶ÓÁĞ¡¢¿Í»§¶Ë×´Ì¬¶ÓÁĞ
+*          ·Ö±ğÎ¬»¤½ÓÊÕÊı¾İ¡¢·¢ËÍÊı¾İ¡¢¿Í»§¶Ë½¨Á´¶ÏÁ´£¬¶ÔÍâ±©Â¶Êı¾İ¶ÁĞ´¡¢×´Ì¬»ñÈ¡½Ó¿Ú
 */
 
 class Socket_Svr
@@ -89,7 +89,7 @@ private:
 
     bool IsSckUsefull ( TSOCKET sck )
     {
-        //ä»¥m_connect_msg é˜Ÿåˆ—çš„èµ„æºä¸ºå‡†
+        //ÒÔm_connect_msg ¶ÓÁĞµÄ×ÊÔ´Îª×¼
         return m_connect_msg.IsSCKUsefull(sck); 
     }
     void Add_Client ( TSOCKET sck,std::string ip )
@@ -107,9 +107,9 @@ private:
     }
 	int m_wait_second;
 	int m_port;
-	//æœåŠ¡çŠ¶æ€ 0 ç»ˆæ­¢æœåŠ¡ 1 è¿è¡ŒæœåŠ¡
+	//·şÎñ×´Ì¬ 0 ÖÕÖ¹·şÎñ 1 ÔËĞĞ·şÎñ
 	int m_svr_status = 0;
-	//ip socket map äº’æ–¥é‡
+	//ip socket map »¥³âÁ¿
 	std::mutex m_lock;
 	std::mutex m_svr_status_lock;
 	int m_recv_thread_num;
@@ -155,14 +155,14 @@ private:
 		server_addr_in.sin_family = AF_INET;
 		server_addr_in.sin_port = htons(m_port);
 		server_addr_in.sin_addr.s_addr = htonl(INADDR_ANY);
-		//è®¾ç½®å¥—æ¥å­—éé˜»å¡
+		//ÉèÖÃÌ×½Ó×Ö·Ç×èÈû
 		if ((m_listen = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0)) < 0)
 		{
 			std::cout << "socket error!" << std::endl;
 			return;
 		}
 
-		//è®¾ç½®é‡ç”¨
+		//ÉèÖÃÖØÓÃ
 		int reuse = 1;
 		setsockopt(m_listen, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
 
@@ -176,20 +176,20 @@ private:
 			std::cout << "listen error!" << std::endl;
 		}
 
-		//æ³¨å†Œepoll
+		//×¢²áepoll
 		m_epoll_events = new struct epoll_event[m_max_count];
 		if (m_epoll_events == NULL)
 		{
 			std::cout << "new epoll_event error!" << std::endl;
 		}
 		m_epoll_fd = epoll_create(m_max_count);
-		//ç™»è®°ç›‘å¬ listenå¥æŸ„
+		//µÇ¼Ç¼àÌı listen¾ä±ú
 		struct epoll_event ev;
 		ev.data.fd = m_listen;
 		ev.events = EPOLLIN | EPOLLET;
 		epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, m_listen, &ev);
 
-		//åˆ›å»ºæ¥æ”¶çº¿ç¨‹ã€å‘é€çº¿ç¨‹
+		//´´½¨½ÓÊÕÏß³Ì¡¢·¢ËÍÏß³Ì
 		for (int iLoop = 0; iLoop < m_recv_thread_total; iLoop++)
 		{
 			m_recv_thread.push_back(std::thread(recv_thread, this));
@@ -198,48 +198,48 @@ private:
 		{
 			m_send_thread.push_back(std::thread(send_thread, this));
 		}
-		//æ§åˆ¶çº¿ç¨‹è¿›å…¥å¾ªç¯
+		//¿ØÖÆÏß³Ì½øÈëÑ­»·
 		int nfds = 0;
 		int conn = 0;
 		while (m_svr_status == 1)
 		{
-			//ç­‰å¾…æ³¨å†Œå¥æŸ„çŠ¶æ€å˜æ›´ 2sæ£€æŸ¥ä¸€æ¬¡æœåŠ¡è¿è¡ŒçŠ¶æ€
+			//µÈ´ı×¢²á¾ä±ú×´Ì¬±ä¸ü 2s¼ì²éÒ»´Î·şÎñÔËĞĞ×´Ì¬
 			if ((nfds = epoll_wait(m_epoll_fd, m_epoll_events, m_max_count, 2000)) <= 0)
 			{
-				//æ·»åŠ è¶…æ—¶æ£€æµ‹
+				//Ìí¼Ó³¬Ê±¼ì²â
 				continue;
 			}
-			//å”¤é†’å éå†å°±è¡Œå¥æŸ„ 
+			//»½ĞÑºó ±éÀú¾ÍĞĞ¾ä±ú 
 			for (int iLoop = 0; iLoop < nfds; iLoop++)
 			{
-				//å”¤é†’å¥æŸ„ä¸º m_listen è¡¨æ˜å­˜åœ¨å»ºé“¾è¯·æ±‚
+				//»½ĞÑ¾ä±úÎª m_listen ±íÃ÷´æÔÚ½¨Á´ÇëÇó
 				if (m_epoll_events[iLoop].data.fd == m_listen)
 				{
-					//æ¥æ”¶è¿æ¥
+					//½ÓÊÕÁ¬½Ó
 					if ((conn = accept(m_listen, (struct sockaddr *)&cli_addr, &cli_addr_size)) < 0)
 					{
 						std::cout << "accept error!" << std::endl;
 						continue;
 					}
 
-					//è®¾ç½®è¿æ¥ä¸ºéé˜»å¡
+					//ÉèÖÃÁ¬½ÓÎª·Ç×èÈû
 					fcntl(conn, F_SETFL, fcntl(conn, F_GETFL, 0) | O_NONBLOCK);
-					//ç™»è®°è¿æ¥
+					//µÇ¼ÇÁ¬½Ó
 					ev.data.fd = conn;
 					ev.events = EPOLLIN | EPOLLET;
 					epoll_ctl(m_epoll_fd, EPOLL_CTL_ADD, conn, &ev);
-					//è·å–å®¢æˆ·ç«¯IP å¹¶æ³¨å†Œ
+					//»ñÈ¡¿Í»§¶ËIP ²¢×¢²á
                     Add_Client ( conn,std::string ( inet_ntoa ( cli_addr.sin_addr ) ) );
-					//æ·»åŠ è¿æ¥å°±ç»ªæ¶ˆæ¯
+					//Ìí¼ÓÁ¬½Ó¾ÍĞ÷ÏûÏ¢
                     m_connect_msg.add_msg ( conn,"1" );
 				}
 				else if (m_epoll_events[iLoop].events & EPOLLIN)
 				{
-					//å°†å¥æŸ„ä¸¢ç»™å·¥ä½œçº¿ç¨‹å¤„ç†
+					//½«¾ä±ú¶ª¸ø¹¤×÷Ïß³Ì´¦Àí
 					m_recv_ready_fd.add_msg_with_notify_one(m_epoll_events[iLoop].data.fd);
 				}
 				/*
-				* ç”±äºä¸éœ€è¦æ¥æ”¶åè§¦å‘å†™æ“ä½œ ä¸ç›‘å¬ EPOLLOUTçŠ¶æ€
+				* ÓÉÓÚ²»ĞèÒª½ÓÊÕºó´¥·¢Ğ´²Ù×÷ ²»¼àÌı EPOLLOUT×´Ì¬
 				else if ( events[i].events & EPOLLOUT )
 				{
 
@@ -250,7 +250,7 @@ private:
 		} //end while
 		close(m_epoll_fd);
 		close(m_listen);
-        //é‡Šæ”¾è¿æ¥èµ„æº
+        //ÊÍ·ÅÁ¬½Ó×ÊÔ´
         Free_All_Client();
 		delete m_epoll_events;
 	}
@@ -268,7 +268,7 @@ private:
 
 			if (tmp.first > 0 && tmp.second > 0)
 			{
-			    //æœªç™»è®° åˆ™æ–­å¼€è¿æ¥ ç­‰å¾…å»ºé“¾åç™»è®°ä¿¡æ¯
+			    //Î´µÇ¼Ç Ôò¶Ï¿ªÁ¬½Ó µÈ´ı½¨Á´ºóµÇ¼ÇĞÅÏ¢
                 if ( !IsSckUsefull( tmp.second ) )
 				{
 					ev.data.fd = tmp.second;
@@ -278,7 +278,7 @@ private:
 					epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, tmp.second, &ev);
 					continue;
 				}
-				//å¾ªç¯æ¥æ”¶æ¶ˆæ¯
+				//Ñ­»·½ÓÊÕÏûÏ¢
 				while (true)
 				{
 					len = 0;
@@ -286,13 +286,13 @@ private:
 					memset(buf, 0x00, sizeof(buf));
 					if ((len = recv(tmp.second, buf, sizeof(buf), 0)) <= 0)
 					{
-						//æ–­é“¾è¯·æ±‚
+						//¶ÏÁ´ÇëÇó
 						if (len == 0)
 						{
-							//å‘é€æ–­é“¾äº‹ä»¶ åœ¨è·å–åˆ°æ–­é“¾è¯·æ±‚æ—¶ å½’è¿˜èµ„æº
+							//·¢ËÍ¶ÏÁ´ÊÂ¼ş ÔÚ»ñÈ¡µ½¶ÏÁ´ÇëÇóÊ± ¹é»¹×ÊÔ´
 							m_connect_msg.add_msg ( tmp.second,"0" );
                             Free_Client ( tmp.second );
-							//æ³¨é”€epollç›‘å¬
+							//×¢Ïúepoll¼àÌı
 							ev.data.fd = tmp.second;
 							ev.events = EPOLLERR;
 							//shutdown(tmp.second,0x02)
@@ -303,19 +303,19 @@ private:
 						}
 						else if (len == -1 && (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN))
 						{
-							//æ— å¯æ¥æ”¶æ•°æ®
+							//ÎŞ¿É½ÓÊÕÊı¾İ
 							break;
 						}
 						else
 						{
-							//æœªçŸ¥é”™è¯¯ å…³é—­è¿æ¥
+							//Î´Öª´íÎó ¹Ø±ÕÁ¬½Ó
 							m_connect_msg.add_msg ( tmp.second,"0" );
                             Free_Client ( tmp.second );
-							//æ³¨é”€epollç›‘å¬
+							//×¢Ïúepoll¼àÌı
 							ev.data.fd = tmp.second;
 							ev.events = EPOLLERR;
 							std::cout << "recv error errno [" << errno << "]! close connect" << std::endl;
-							//å…³é—­è¿æ¥
+							//¹Ø±ÕÁ¬½Ó
 							shutdown(tmp.second, 0x02);
 							epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, tmp.second, &ev);
 							break;
@@ -331,23 +331,23 @@ private:
 						msg += std::string(buf, sizeof(buf));
 						break;
 					}
-				}//while æ¥æ”¶æ¶ˆæ¯ç»“æŸ
+				}//while ½ÓÊÕÏûÏ¢½áÊø
 
-				 //æ¥æ”¶åˆ°æ¶ˆæ¯ å°†æ¶ˆæ¯æ”¾ç½®äº æ¥æ”¶æ¶ˆæ¯é˜Ÿåˆ—ä¸­
+				 //½ÓÊÕµ½ÏûÏ¢ ½«ÏûÏ¢·ÅÖÃÓÚ ½ÓÊÕÏûÏ¢¶ÓÁĞÖĞ
 				if (msg.length() == 0)
 				{
 					continue;
 				}
 				else
 				{
-					//å‘é€æ¥æ”¶åˆ°æ¶ˆæ¯æ—¶é—´
+					//·¢ËÍ½ÓÊÕµ½ÏûÏ¢Ê±¼ä
 					m_recv_msg.add_msg(tmp.second,msg);
 				}
 			}
 			else
 			{
-				//ç­‰å¾…æ¥æ”¶æ¶ˆæ¯é€šçŸ¥
-				//è¶…æ—¶ æ£€æŸ¥æœåŠ¡å™¨çŠ¶æ€ ç»§ç»­ç­‰å¾…
+				//µÈ´ı½ÓÊÕÏûÏ¢Í¨Öª
+				//³¬Ê± ¼ì²é·şÎñÆ÷×´Ì¬ ¼ÌĞøµÈ´ı
 				continue;
 			}
 		}
@@ -355,7 +355,7 @@ private:
 
 	void send_thread_run()
 	{
-		//å¾ªç¯ç­‰å¾…å‘é€é€šçŸ¥
+		//Ñ­»·µÈ´ı·¢ËÍÍ¨Öª
 		struct epoll_event ev;
         std::list < std::pair < TClient_info,std::list <std::string> > > tmp;
 		int ret = 0;
@@ -368,26 +368,26 @@ private:
                 {
                     continue;
                 }
-                //é€æ¡å‘é€æ¶ˆæ¯
+                //ÖğÌõ·¢ËÍÏûÏ¢
                 for ( auto &msg : p.second )
                 {
 			        ret = send(p.first.m_socket, msg.c_str(), msg.length(), MSG_NOSIGNAL);
                     if ( ret < 0 )
                     {
-                        //ä¸»åŠ¨æ–­é“¾
+                        //Ö÷¶¯¶ÏÁ´
                         if ( m_send_msg.get_client_ip ( p.first.m_socket ) != p.first.m_ip )
                         {
                             break;
                         }
                         else
                         {
-                            //å¥—æ¥å­—å¼‚å¸¸
+                            //Ì×½Ó×ÖÒì³£
 							m_connect_msg.add_msg ( p.first.m_socket ,"0" );
                             Free_Client ( p.first.m_socket );
                             ev.data.fd = p.first.m_socket;
 							ev.events = EPOLLERR;
 							std::cout << "send error errno [" << errno << "]! close connect" << std::endl;
-							//å…³é—­è¿æ¥
+							//¹Ø±ÕÁ¬½Ó
 							shutdown(p.first.m_socket, 0x02);
 							epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, p.first.m_socket, &ev);
                         }
@@ -410,7 +410,7 @@ private:
 	bool post_accept()
 	{
 		m_post_accept_lock.lock();
-		//ä¿è¯æŠ•é€’ä¸ªæ•°ä¸º m_post_accept_total 
+		//±£Ö¤Í¶µİ¸öÊıÎª m_post_accept_total 
 		while (m_post_accept_num < m_post_accept_total)
 		{
 			DWORD dwbytes;
@@ -425,6 +425,7 @@ private:
 			if (p_oper_data->m_socket == SOCKET_ERROR)
 			{
 				std::cout << "acceptex WSASocket Error" << std::endl;
+				m_post_accept_lock.unlock();
 				return false;
 			}
 			BOOL rc = m_pFucAcceptEx(m_listen, p_oper_data->m_socket,
@@ -437,22 +438,22 @@ private:
 	}
 	int do_accept(TCOM_KEY * pcom_key, TOPER_DATA * poper_data)
 	{
-		//æ¶ˆè€—ä¸€ä¸ªacceptæŠ•é€’
-		//æ¥æ”¶è¿æ¥		
+		//ÏûºÄÒ»¸öacceptÍ¶µİ
+		//½ÓÊÕÁ¬½Ó		
 		SOCKADDR_IN* ClientAddr = NULL;
 		SOCKADDR_IN* LocalAddr = NULL;
 		int remoteLen = sizeof(SOCKADDR_IN), localLen = sizeof(SOCKADDR_IN);
-		//å°†æ¥æ”¶åˆ°çš„è¿æ¥ä¿¡æ¯è½¬æ¢å‡ºæ¥
+		//½«½ÓÊÕµ½µÄÁ¬½ÓĞÅÏ¢×ª»»³öÀ´
 		m_pFucGetAcceptExSockAddrs(poper_data->m_databuf.buf, 0, sizeof(SOCKADDR_IN) + 16, sizeof(SOCKADDR_IN) + 16, (LPSOCKADDR*)&LocalAddr, &localLen, (LPSOCKADDR*)&ClientAddr, &remoteLen);
-		//ä¸ºæ–°æ¥å…¥å®¢æˆ·ç«¯åˆ†é… ä¸€ä¸ªæ“ä½œæ•°æ®ç»“æ„ å®Œæˆé”®åœ¨æŠ•é€’acceptæ—¶å·²ç»åˆ†é…
+		//ÎªĞÂ½ÓÈë¿Í»§¶Ë·ÖÅä Ò»¸ö²Ù×÷Êı¾İ½á¹¹ Íê³É¼üÔÚÍ¶µİacceptÊ±ÒÑ¾­·ÖÅä
 		PCOM_KEY p_cli_com_key = new TCOM_KEY;
 		p_cli_com_key->m_socket = poper_data->m_socket;
 		p_cli_com_key->m_ip = std::string(inet_ntoa(ClientAddr->sin_addr));
 
-		//å°†å¥—æ¥å­—ç»‘å®šè‡³å®Œæˆç«¯å£
+		//½«Ì×½Ó×Ö°ó¶¨ÖÁÍê³É¶Ë¿Ú
 		if (false == CreateIoCompletionPort((HANDLE)poper_data->m_socket, m_IOCPSocket, (ULONG_PTR)p_cli_com_key, 0))
 		{
-			//å…³é—­è¿™ä¸ªè¿æ¥
+			//¹Ø±ÕÕâ¸öÁ¬½Ó
 			std::cout << "bind client TO IOCP Error,Need Client Reconnect" << std::endl;
 			closesocket(p_cli_com_key->m_socket);
 			delete p_cli_com_key;
@@ -464,7 +465,7 @@ private:
 			m_connect_msg.add_msg(p_cli_com_key->m_socket,"1");
 			post_recv(p_cli_com_key, poper_data);
 		}
-		//æŠ•é€’æ•°é‡å‡å°‘1 å¹¶é‡æ–°æŠ•é€’	
+		//Í¶µİÊıÁ¿¼õÉÙ1 ²¢ÖØĞÂÍ¶µİ	
 		m_post_accept_lock.lock();
 		m_post_accept_num--;
 		m_post_accept_lock.unlock();
@@ -487,42 +488,39 @@ private:
 
 	int do_recv(PCOM_KEY  pcom_key, POPER_DATA  poper_data)
 	{
-		//æŸ¥çœ‹å¥—æ¥å­—æ˜¯å¦æ³¨å†Œ	
-		if (!IsInIPMAP(pcom_key->m_socket, pcom_key->m_ip))
+		//²é¿´Ì×½Ó×ÖÊÇ·ñ×¢²á	
+		if (!IsSckUsefull(pcom_key->m_socket) )
 		{
-			//æœªçŸ¥è¿æ¥ å…³é—­å 
+			//Î´ÖªÁ¬½Ó ¹Ø±Õºó 
 			std::cout << "Socket Not In Map, Refree Resource" << std::endl;
 			do_close(pcom_key, poper_data, 0);
 		}
-        //å‘é€æ¶ˆæ¯
-		m_recv_msg.add_msg(pcom_key->m_socket,std::string(poper_data->m_databuf.buf, poper_data->m_overlapped.InternalHigh));
-		//æ¸…ç©ºæ“ä½œæ•°æ®
+        //·¢ËÍÏûÏ¢
+		m_recv_msg.add_msg(pcom_key->m_socket,std::string(poper_data->m_databuf.buf, poper_data->m_overlapped.InternalHigh),500);
+		//Çå¿Õ²Ù×÷Êı¾İ
 		memset(poper_data->m_buffer, 0x00, sizeof(poper_data->m_buffer));
 		memset(&(poper_data->m_overlapped), 0x00, sizeof(poper_data->m_overlapped));
 		return poper_data->m_overlapped.InternalHigh;
 	}
 
-	//inotify_flg 1 é€šçŸ¥ 0 ä¸é€šçŸ¥
+	//inotify_flg 1 Í¨Öª 0 ²»Í¨Öª
 	bool do_close(PCOM_KEY  pcom_key, POPER_DATA  poper_data, int inotify_flg = 1)
 	{
-		Svr_res tmp;
-		
 		closesocket(pcom_key->m_socket);
         std::string ip =  m_connect_msg.get_client_ip( pcom_key->m_socket );
         TSOCKET sck = pcom_key->m_socket;
 		if ( ip  == pcom_key->m_ip )
 		{
-			//å›æ”¶IOèµ„æº
+			//»ØÊÕIO×ÊÔ´
 			delete pcom_key;
 			delete poper_data;
             Free_Client (  pcom_key->m_socket );
 		}
         if (inotify_flg == 1)
 		{
-			m_connect_msg.add(sck,"0");
+			m_connect_msg.add_msg(sck,"0");
 		}
-
-		//é‡æ–°æŠ•é€’ä¸€ä¸ªè¿æ¥
+		//ÖØĞÂÍ¶µİÒ»¸öÁ¬½Ó
 		m_post_accept_lock.lock();
 		m_post_accept_num--;
 		m_post_accept_lock.unlock();
@@ -541,13 +539,13 @@ private:
 			std::cout << "WSAStartup Error" << std::endl;
 			return false;
 		}
-		//åˆ›å»ºå®Œæˆç«¯å£
+		//´´½¨Íê³É¶Ë¿Ú
 		if (NULL == (m_IOCPSocket = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0, 0)))
 		{
 			std::cout << "create IOCP Error" << std::endl;
 			return false;
 		}
-		//åˆ›å»ºæœåŠ¡å™¨ç›‘å¬
+		//´´½¨·şÎñÆ÷¼àÌı
 		m_listen = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
 		if (m_listen == INVALID_SOCKET)
 		{
@@ -558,7 +556,7 @@ private:
 		m_ServiceAddr.sin_addr.S_un.S_addr = INADDR_ANY;
 		m_ServiceAddr.sin_port = htons((u_short)m_port);
 
-		//å°†m_listenç»‘å®šè‡³å®Œæˆç«¯å£
+		//½«m_listen°ó¶¨ÖÁÍê³É¶Ë¿Ú
 		PCOM_KEY pListen_com_key = new TCOM_KEY;
 		if (NULL == CreateIoCompletionPort((HANDLE)m_listen, m_IOCPSocket, (DWORD)pListen_com_key, 0))
 		{
@@ -571,16 +569,16 @@ private:
 			std::cout << "bind Error" << std::endl;
 			return false;
 		}
-		//ç›‘å¬
+		//¼àÌı
 		if (SOCKET_ERROR == listen(m_listen, SOMAXCONN))
 		{
 			std::cout << "listen Error" << std::endl;
 			return false;
 		}
-		// ä½¿ç”¨AcceptExå‡½æ•°ï¼Œå› ä¸ºè¿™ä¸ªæ˜¯å±äºWinSock2è§„èŒƒä¹‹å¤–çš„å¾®è½¯å¦å¤–æä¾›çš„æ‰©å±•å‡½æ•°
-		// æ‰€ä»¥éœ€è¦é¢å¤–è·å–ä¸€ä¸‹å‡½æ•°çš„æŒ‡é’ˆï¼Œ
-		// è·å–AcceptExå‡½æ•°æŒ‡é’ˆ
-		// AcceptEx å’Œ GetAcceptExSockaddrs çš„GUIDï¼Œç”¨äºå¯¼å‡ºå‡½æ•°æŒ‡é’ˆ
+		// Ê¹ÓÃAcceptExº¯Êı£¬ÒòÎªÕâ¸öÊÇÊôÓÚWinSock2¹æ·¶Ö®ÍâµÄÎ¢ÈíÁíÍâÌá¹©µÄÀ©Õ¹º¯Êı
+		// ËùÒÔĞèÒª¶îÍâ»ñÈ¡Ò»ÏÂº¯ÊıµÄÖ¸Õë£¬
+		// »ñÈ¡AcceptExº¯ÊıÖ¸Õë
+		// AcceptEx ºÍ GetAcceptExSockaddrs µÄGUID£¬ÓÃÓÚµ¼³öº¯ÊıÖ¸Õë
 
 		GUID GuidAcceptEx = WSAID_ACCEPTEX;
 		GUID GuidGetAcceptExSockAddrs = WSAID_GETACCEPTEXSOCKADDRS;
@@ -615,7 +613,7 @@ private:
 			std::cout << "Get GetAcceptExSockAddrs Function Pointer Error" << std::endl;
 			return false;
 		}
-		//å¯åŠ¨å·¥ä½œçº¿ç¨‹ é€‰æ‹©å¤–éƒ¨é…ç½®çš„æ–¹å¼ ä¸é€‰ç”¨å†…æ ¸æ•° * 2 çš„æœ€ä¼˜é…ç½®
+		//Æô¶¯¹¤×÷Ïß³Ì Ñ¡ÔñÍâ²¿ÅäÖÃµÄ·½Ê½ ²»Ñ¡ÓÃÄÚºËÊı * 2 µÄ×îÓÅÅäÖÃ
 		for (int iLoop = 0; iLoop < m_recv_thread_total; iLoop++)
 		{
 			m_recv_thread.push_back(std::thread(recv_thread, this));
@@ -624,12 +622,12 @@ private:
 		{
 			m_send_thread.push_back(std::thread(send_thread, this));
 		}
-		// ä¸ºAcceptEx å‡†å¤‡å‚æ•°ï¼Œç„¶åæŠ•é€’AcceptEx I/Oè¯·æ±‚
+		// ÎªAcceptEx ×¼±¸²ÎÊı£¬È»ºóÍ¶µİAcceptEx I/OÇëÇó
 		post_accept();
+		return true;
 	}
 	void recv_thread_run()
 	{
-		Svr_res tmp;
 		PCOM_KEY pcom_key = NULL;
 		OVERLAPPED *poverlapped = NULL;
 		POPER_DATA poper_data = NULL;
@@ -637,39 +635,39 @@ private:
 		BOOL res = false;
 		while (m_svr_status == 1)
 		{
-			res = GetQueuedCompletionStatus(m_IOCPSocket, &dwIOSize, (PULONG_PTR)&pcom_key, &poverlapped, -1);
+			res = false;
+			res = GetQueuedCompletionStatus(m_IOCPSocket, &dwIOSize, (PULONG_PTR)&pcom_key, &poverlapped,1000);
 			if (poverlapped != NULL)
 			{
 				poper_data = CONTAINING_RECORD(poverlapped, TOPER_DATA, m_overlapped);
 			}
 			if (!res)
 			{
+				if (WAIT_TIMEOUT == WSAGetLastError())
+				{
+					continue;
+				}
+
 				if (poper_data == NULL)
 				{
-					if (WAIT_TIMEOUT == WSAGetLastError())
-					{
-						continue;
-					}
-					else
-					{
-						std::cout << "GetQueuedCompletionStatus Error!" << std::endl;
-					}
+					std::cout << "GetQueuedCompletionStatus Error!" << std::endl;
 				}
 				else
 				{
-					//æ¥æ”¶åˆ°å¼‚å¸¸æ–­é“¾è¯·æ±‚ï¼ˆå¦‚å®¢æˆ·ç«¯å®•æœº æœªä½¿ç”¨ closescoketï¼‰
+					//½ÓÊÕµ½Òì³£¶ÏÁ´ÇëÇó£¨Èç¿Í»§¶Ëå´»ú Î´Ê¹ÓÃ closescoket£©
 					if (poper_data->m_type == RECV_MSG)
 					{
-						//æ¥æ”¶åˆ°å¼‚å¸¸çš„å»ºé“¾è¯·æ±‚ é‡Šæ”¾å¥—æ¥å­—èµ„æº å¹¶é‡æ–°æŠ•é€’è¯·æ±‚
+						//½ÓÊÕµ½Òì³£µÄ½¨Á´ÇëÇó ÊÍ·ÅÌ×½Ó×Ö×ÊÔ´ ²¢ÖØĞÂÍ¶µİÇëÇó
 						do_close(pcom_key, poper_data, 1);
 						std::cout << "Recv Disconnect From Client! Release Client Resource" << std::endl;
 					}
 					else if (poper_data->m_type == ACCEPT_CONN)
 					{
-						//æ¥æ”¶åˆ°å¼‚å¸¸çš„å»ºé“¾è¯·æ±‚ é‡Šæ”¾å¥—æ¥å­—èµ„æº å¹¶é‡æ–°æŠ•é€’è¯·æ±‚
+						//½ÓÊÕµ½Òì³£µÄ½¨Á´ÇëÇó ÊÍ·ÅÌ×½Ó×Ö×ÊÔ´ ²¢ÖØĞÂÍ¶µİÇëÇó
 						closesocket(poper_data->m_socket);
+						std::cout << "Error "<<poper_data->m_socket << std::endl;
 						delete poper_data;
-						//é‡æ–°æŠ•é€’ä¸€ä¸ªè¿æ¥
+						//ÖØĞÂÍ¶µİÒ»¸öÁ¬½Ó
 						m_post_accept_lock.lock();
 						m_post_accept_num--;
 						m_post_accept_lock.unlock();
@@ -678,16 +676,21 @@ private:
 					}
 					else
 					{
+						if (WAIT_TIMEOUT == WSAGetLastError())
+						{
+							continue;
+						}
+						//½ÓÊÕµ½Òì³£µÄ½¨Á´ÇëÇó ÊÍ·ÅÌ×½Ó×Ö×ÊÔ´ ²¢ÖØĞÂÍ¶µİÇëÇó
 						std::cout << "GetQueuedCompletionStatus Error! Release Client Resourse" << std::endl;
 					}
 				}
 			}
 			else
 			{
-				//IOCPæ­£å¸¸æ¥æ”¶åˆ°æ•°æ®
+				//IOCPÕı³£½ÓÊÕµ½Êı¾İ
 				if (dwIOSize != 0)
 				{
-					//æ¥æ”¶åˆ°è¯·æ±‚ åŒ…æ‹¬ æ¥æ”¶ã€å»ºé“¾ï¼ˆå»ºé“¾é™„å¸¦æ¥æ”¶æ•°æ®ï¼‰
+					//½ÓÊÕµ½ÇëÇó °üÀ¨ ½ÓÊÕ¡¢½¨Á´£¨½¨Á´¸½´ø½ÓÊÕÊı¾İ£©
 					if (poper_data->m_type == RECV_MSG)
 					{
 						do_recv(pcom_key, poper_data);
@@ -705,18 +708,18 @@ private:
 				}
 				else
 				{
-					//æŸ¥çœ‹å®Œæˆé”®æ˜¯å¦ä¸ºç©º
+					//²é¿´Íê³É¼üÊÇ·ñÎª¿Õ
 					if (pcom_key == NULL)
 					{
-						//æœªçŸ¥æƒ…å†µ ä¸æ¸…æ¥šä»€ä¹ˆæ—¶å€™å®Œæˆé”®æ˜¯ç©ºçš„
+						//Î´ÖªÇé¿ö ²»Çå³şÊ²Ã´Ê±ºòÍê³É¼üÊÇ¿ÕµÄ
 						std::cout << "pcom_key is NULL" << std::endl;
 					}
 					else if (poper_data != NULL)
 					{
-						//ä¸ºç®¡ç†è¯·æ±‚ æ“ä½œä¸ºæ¥æ”¶ã€å‘é€æ—¶ä¸ºæ­£å¸¸æ–­é“¾è¯·æ±‚ï¼›æ“ä½œä¸ºå»ºé“¾æ—¶ ä¸ºå»ºé“¾è¯·æ±‚æ²¡æœ‰é™„ä»¶æ¶ˆæ¯
+						//Îª¹ÜÀíÇëÇó ²Ù×÷Îª½ÓÊÕ¡¢·¢ËÍÊ±ÎªÕı³£¶ÏÁ´ÇëÇó£»²Ù×÷Îª½¨Á´Ê± Îª½¨Á´ÇëÇóÃ»ÓĞ¸½¼şÏûÏ¢
 						if (poper_data->m_type == RECV_MSG || poper_data->m_type == SEND_MSG)
 						{
-							//å¸¸è§„æ–­é“¾
+							//³£¹æ¶ÏÁ´
 							do_close(pcom_key, poper_data, 1);
 							std::cout << "client disconneted!" << std::endl;
 						}
@@ -727,7 +730,7 @@ private:
 					}
 					else
 					{
-						//æœªçŸ¥é”™è¯¯	å®Œæˆé”®ä¸ºNULL æ“ä½œæ•° éNULL
+						//Î´Öª´íÎó	Íê³É¼üÎªNULL ²Ù×÷Êı ·ÇNULL
 						std::cout << "complate_key and operater_date both NULL" << std::endl;
 					}
 				}
@@ -737,8 +740,7 @@ private:
 
 	void send_thread_run()
 	{
-        struct epoll_event ev;
-        std::list < std::pair < TClient_info,std::list <std::string> > > tmp:
+		std::list < std::pair < TClient_info, std::list <std::string> > > tmp;
 		int ret = 0;
 		while (m_svr_status == 1)
 		{
@@ -749,28 +751,25 @@ private:
                 {
                     continue;
                 }
-                //é€æ¡å‘é€æ¶ˆæ¯
+                //ÖğÌõ·¢ËÍÏûÏ¢
                 for ( auto &msg : p.second )
                 {
-			        ret = send(p.first.m_socket, msg.c_str(), msg.length(), MSG_NOSIGNAL);
+			        ret = send(p.first.m_socket, msg.c_str(), msg.length(), 0);
                     if ( ret < 0 )
                     {
-                        //ä¸»åŠ¨æ–­é“¾
+                        //Ö÷¶¯¶ÏÁ´
                         if ( m_send_msg.get_client_ip ( p.first.m_socket ) != p.first.m_ip )
                         {
                             break;
                         }
                         else
                         {
-                            //å¥—æ¥å­—å¼‚å¸¸
-							m_connect_msg.add_msg ( tmp.second,"0" );
+                            //Ì×½Ó×ÖÒì³£
+							m_connect_msg.add_msg ( p.first.m_socket,"0" );
                             Free_Client ( p.first.m_socket );
-                            ev.data.fd = p.first.m_socket;
-							ev.events = EPOLLERR;
 							std::cout << "send error errno [" << errno << "]! close connect" << std::endl;
-							//å…³é—­è¿æ¥
+							//¹Ø±ÕÁ¬½Ó
 							shutdown(p.first.m_socket, 0x02);
-							epoll_ctl(m_epoll_fd, EPOLL_CTL_DEL, p.first.m_socket, &ev);
                         }
                     }
                 }
@@ -818,7 +817,7 @@ public:
 	{
 	}
 #endif
-	//å¯åŠ¨æœåŠ¡ å¹¶åˆ›å»ºsocketæœåŠ¡çº¿ç¨‹
+	//Æô¶¯·şÎñ ²¢´´½¨socket·şÎñÏß³Ì
 	bool create_svr_thread(int port)
 	{
 		m_svr_status_lock.lock();
@@ -846,7 +845,7 @@ public:
 		}
 	}
 
-	//æ–­å¼€è¿æ¥ å¹¶åœæ­¢æœåŠ¡å™¨ç›‘å¬
+	//¶Ï¿ªÁ¬½Ó ²¢Í£Ö¹·şÎñÆ÷¼àÌı
 	bool stop_svr_thread()
 	{
 		m_svr_status_lock.lock();
@@ -875,7 +874,7 @@ public:
 		return true;
 	}
 
-	//æ¸…ç©ºå½“å‰è¿æ¥
+	//Çå¿Õµ±Ç°Á¬½Ó
 	bool restart_svr_thread()
 	{
 		return true;
