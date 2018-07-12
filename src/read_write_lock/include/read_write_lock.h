@@ -1,56 +1,20 @@
 #pragma once
 #include <iostream>
 #include <mutex>
-#include <condition_variable>
+#ifndef LINUX_PROJ 
+#include <shared_mutex>
+#endif
 //¶Á²¢·¢ Ğ´¶ÀÕ¼
 //Ğ´ÓÅÏÈ ·¢ÉúĞ´Ê± ¶Á²Ù×÷×èÈû µÈ´ıÕıÔÚ¶ÁÍê³Éºó Á¢¼´Ğ´
 class read_write_lock
 {
-#ifndef LINUX_PROJ
-private:
-	std::mutex m_lock;
-	std::mutex m_read_lock;
-	std::mutex m_write_lock;
-	int m_reader = 0;
-	int m_write_flg = 0;
-public:
-    void write_lock()
-    {
-		m_write_lock.lock();
-		m_write_flg = 1;
-		while ( m_reader != 0 )
-		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		}
-    }
-    void write_unlock()
-    {
-		m_write_flg = 0;
-		m_write_lock.unlock();
-    }
-    void read_lock()
-    {
-		if (m_write_flg == 1)
-		{
-			m_write_lock.lock();
-			m_write_lock.unlock();
-		}
-		m_read_lock.lock();
-		m_reader++;
-		m_read_lock.unlock();
-    }
-    void read_unlock()
-    {
-		m_read_lock.lock();
-		m_reader--;
-		m_read_lock.unlock();
-    }
-#else
+#ifdef LINUX_PROJ
 private:
     int m_reader = 0;
     int m_writer_flg = 0;
     std::mutex m_read_lock; 
-    //å†™ä¼˜å…ˆæ ‡è¯† ç»ˆæ­¢è¯»æ“ä½œ
+
+    //å†™ä¼˜å…ˆæ ‡è¯?ç»ˆæ­¢è¯»æ“ä½?
     std::mutex m_operator_lock; 
     std::mutex m_write_lock; 
 public:
@@ -62,8 +26,8 @@ public:
     }
     void write_unlock()
     {
-        m_write_lock.unlock();
         m_writer_flg = 0;
+        m_write_lock.unlock();
         m_operator_lock.unlock();
     }
     void read_lock()
@@ -96,5 +60,27 @@ public:
         m_read_lock.unlock();
 
     }
+#else
+private:
+	std::shared_timed_mutex m_operator_lock;
+	//std::shared_mutex operator_lock;
+public:
+    void write_lock()
+    {
+        m_operator_lock.lock();
+    }
+    void write_unlock()
+    {
+        m_operator_lock.unlock();
+    }
+    void read_lock()
+    {
+		m_operator_lock.lock_shared();
+    }
+    void read_unlock()
+    {
+		m_operator_lock.unlock_shared();
+    }
+
 #endif
 };
