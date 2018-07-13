@@ -4,21 +4,18 @@
 #ifndef LINUX_PROJ 
 #include <shared_mutex>
 #endif
-#include <condition_variable>
 //¶Á²¢·¢ Ğ´¶ÀÕ¼
 //Ğ´ÓÅÏÈ ·¢ÉúĞ´Ê± ¶Á²Ù×÷×èÈû µÈ´ıÕıÔÚ¶ÁÍê³Éºó Á¢¼´Ğ´
 class read_write_lock
 {
+#ifdef LINUX_PROJ
 private:
     int m_reader = 0;
     int m_writer_flg = 0;
     std::mutex m_read_lock; 
-    //å†™ä¼˜å…ˆæ ‡è¯† ç»ˆæ­¢è¯»æ“ä½œ
-#ifndef LINUX_PROJ
-    std::shared_mutex m_operator_lock; 
-#else
+
+    //å†™ä¼˜å…ˆæ ‡è¯?ç»ˆæ­¢è¯»æ“ä½?
     std::mutex m_operator_lock; 
-#endif
     std::mutex m_write_lock; 
 public:
     void write_lock()
@@ -63,4 +60,27 @@ public:
         m_read_lock.unlock();
 
     }
+#else
+private:
+	std::shared_timed_mutex m_operator_lock;
+	//std::shared_mutex operator_lock;
+public:
+    void write_lock()
+    {
+        m_operator_lock.lock();
+    }
+    void write_unlock()
+    {
+        m_operator_lock.unlock();
+    }
+    void read_lock()
+    {
+		m_operator_lock.lock_shared();
+    }
+    void read_unlock()
+    {
+		m_operator_lock.unlock_shared();
+    }
+
+#endif
 };

@@ -5,3 +5,4 @@ all:
 	cd ./src/read_write_lock/src/ && make
 	cd ./src/Server_data/src/ && make
 	cd ./src/Service_TCP/src && make
+	cd ./src/File_IO/src && make
